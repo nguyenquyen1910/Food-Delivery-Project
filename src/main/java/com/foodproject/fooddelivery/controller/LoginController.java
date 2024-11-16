@@ -35,22 +35,7 @@ public class LoginController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody SignUpRequest signUpRequest) {
-        ResponseData responseData = new ResponseData();
-
-        boolean isPhoneExists=loginServiceImp.isPhoneExists(signUpRequest.getPhone());
-        if(isPhoneExists) {
-            responseData.setSuccess(false);
-            responseData.setData("Số điện thoại đã tồn tại");
-            return new ResponseEntity<>(responseData,HttpStatus.OK);
-        }
-        ResponseData addUserResponse = loginServiceImp.addUser(signUpRequest);
-        if (addUserResponse.isSuccess()) {
-            responseData.setSuccess(true);
-            responseData.setData(addUserResponse.getData());
-        } else {
-            responseData.setSuccess(false);
-            responseData.setData(addUserResponse.getData());
-        }
+        ResponseData responseData = loginServiceImp.addUser(signUpRequest);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
 }

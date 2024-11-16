@@ -219,27 +219,37 @@ $(document).ready(function() {
                 roleId: 2
             };
 
+
             $.ajax({
                 url: 'http://localhost:8080/login/signup',
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(user),
                 success: function(response) {
+                    console.log(response);
                     if (response.success) {
                         localStorage.setItem('currentuser', JSON.stringify(response.data.user));
                         localStorage.setItem('token',response.data.token);
-                        toast({ title: 'Thành công', message: 'Tạo thành công tài khoản !', type: 'success', duration: 3000 });
+                        toast({ title: 'Success', message: 'Tạo thành công tài khoản !', type: 'success', duration: 3000 });
                         closeModal();
                         kiemtradangnhap();
                         updateAmount();
                     } else {
-                        if(response.isExist){
-                            toast({ title: 'Thất bại', message: 'Tài khoản đã tồn tại !', type: 'error', duration: 3000 });
+                        if(response.exist){
+                            if(response.description === "Email đã được sử dụng"){
+                                toast({ title: 'Error', message: 'Email đã được sử dụng !', type: 'error', duration: 3000 });
+                            }
+                            else if(response.description === "Số điện thoại đã được sử dụng"){
+                                toast({ title: 'Error', message: 'Số điện thoại đã được sử dụng !', type: 'error', duration: 3000 });
+                            }
+                            else if(response.description === "Tài khoản đã tồn tại"){
+                                toast({ title: 'Error', message: 'Tài khoản đã tồn tại !', type: 'error', duration: 3000 });
+                            }
                         }
                     }
                 },
                 error: function() {
-                    toast({ title: 'Lỗi', message: 'Đăng ký không thành công!', type: 'error', duration: 3000 });
+                    toast({ title: 'Error', message: 'Đăng ký không thành công!', type: 'error', duration: 3000 });
                 }
             });
         }

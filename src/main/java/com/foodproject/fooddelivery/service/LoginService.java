@@ -82,13 +82,24 @@ public class LoginService implements LoginServiceImp {
     @Override
     public ResponseData addUser(SignUpRequest signUpRequest) {
         ResponseData responseData = new ResponseData();
-        if (isPhoneExists(signUpRequest.getPhone()) || isEmailExists(signUpRequest.getEmail())) {
+        if(isEmailExists(signUpRequest.getEmail()) && isPhoneExists(signUpRequest.getPhone())){
             responseData.setSuccess(false);
             responseData.setExist(true);
             responseData.setDescription("Tài khoản đã tồn tại");
             return responseData;
         }
-
+        if(isEmailExists(signUpRequest.getEmail())){
+            responseData.setSuccess(false);
+            responseData.setExist(true);
+            responseData.setDescription("Email đã được sử dụng");
+            return responseData;
+        }
+        if (isPhoneExists(signUpRequest.getPhone())) {
+            responseData.setSuccess(false);
+            responseData.setExist(true);
+            responseData.setDescription("Số điện thoại đã được sử dụng");
+            return responseData;
+        }
         Roles roles=new Roles();
         roles.setId(signUpRequest.getRoleId());
         Users users=new Users();
