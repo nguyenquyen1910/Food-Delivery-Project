@@ -1033,12 +1033,22 @@ addAccount.addEventListener("click", (e) => {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                toast({ title: 'Thành công', message: 'Tạo thành công tài khoản!', type: 'success', duration: 3000 });
+                toast({ title: 'Success', message: 'Tạo thành công tài khoản!', type: 'success', duration: 3000 });
                 document.querySelector(".signup").classList.remove("open");
                 showUser();
                 signUpFormReset();
             } else {
-                toast({ title: 'Lỗi', message: data.message || 'Đã có lỗi xảy ra khi tạo tài khoản.', type: 'error', duration: 3000 });
+                if(data.exist){
+                    if(data.description === "Email đã được sử dụng"){
+                        toast({ title: 'Error', message: 'Email đã được sử dụng !', type: 'error', duration: 3000 });
+                    }
+                    else if(data.description === "Số điện thoại đã được sử dụng"){
+                        toast({ title: 'Error', message: 'Số điện thoại đã được sử dụng !', type: 'error', duration: 3000 });
+                    }
+                    else if(data.description === "Tài khoản đã tồn tại"){
+                        toast({ title: 'Error', message: 'Tài khoản đã tồn tại !', type: 'error', duration: 3000 });
+                    }
+                }
             }
         })
         .catch(error => {
