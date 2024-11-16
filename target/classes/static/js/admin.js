@@ -169,7 +169,7 @@ function getMoney() {
     .then(data => {
         data = data.data;
         data.forEach(item => {
-            if(item.status != -1){
+            if(item.status === 1){
                 tongtien += item.totalPrice;
             }
         });
