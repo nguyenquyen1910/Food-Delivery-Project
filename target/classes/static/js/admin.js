@@ -32,7 +32,6 @@ function handleAdminAccess(){
     })
         .then(response => {
             if (response.ok) {
-                console.log("User has admin access");
                 document.getElementById("name-acc").innerHTML = currentUser.fullName;
             } else {
                 console.error("Access denied");
@@ -387,35 +386,75 @@ function createId(arr) {
 
 // Xóa sản phẩm 
 function deleteProduct(id) {
-    let products = JSON.parse(localStorage.getItem("products"));
-    let index = products.findIndex(item => {
-        return item.id == id;
+    fetch('http://localhost:8080/products/all', {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem("token")}`
+        }
     })
-    if(index==-1){
-        toast({ title: 'Warning', message: 'Không tìm thấy sản phẩm !', type: 'warning', duration: 3000 });
-        return;
-    }
-    if (confirm("Bạn có chắc muốn xóa?") == true) {
-        fetch(`http://localhost:8080/products/admin/delete/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("token")}` 
-            }
-        }).then(response => response.json())
+        .then(response => response.json())
         .then(data => {
-            if(data.data==true){
-                localStorage.setItem("products",JSON.stringify(products));
+            let products = data.data;
+            let index = products.findIndex(item => item.id == id);
+
+            if (index === -1) {
                 toast({
-                    title: 'Thành công',
-                    message: 'Xóa sản phẩm thành công!',
-                    type: 'success',
+                    title: 'Warning',
+                    message: 'Không tìm thấy sản phẩm!',
+                    type: 'warning',
                     duration: 3000
                 });
-                showProduct(currentPageAdmin);
+                return;
+            }
+            if (confirm("Bạn có chắc muốn xóa?") === true) {
+                fetch(`http://localhost:8080/products/admin/delete/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("token")}`
+                    }
+                })
+                    .then(response => response.json())
+                    .then(deleteResponse => {
+                        if (deleteResponse.data === true) {
+                            products.splice(index, 1);
+                            localStorage.setItem("products", JSON.stringify(products));
+                            toast({
+                                title: 'Success',
+                                message: 'Xóa sản phẩm thành công!',
+                                type: 'success',
+                                duration: 3000
+                            });
+                            showProduct(currentPageAdmin);
+                        } else {
+                            toast({
+                                title: 'Error',
+                                message: 'Xóa sản phẩm thất bại!',
+                                type: 'error',
+                                duration: 3000
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Lỗi khi xóa sản phẩm:", error);
+                        toast({
+                            title: 'Error',
+                            message: 'Đã xảy ra lỗi khi xóa sản phẩm!',
+                            type: 'error',
+                            duration: 3000
+                        });
+                    });
             }
         })
-    }
+        .catch(error => {
+            console.error("Lỗi khi lấy danh sách sản phẩm:", error);
+            toast({
+                title: 'Error',
+                message: 'Không thể tải danh sách sản phẩm!',
+                type: 'error',
+                duration: 3000
+            });
+        });
 }
 
 // Lấy lại sản phẩm đã xóa
@@ -597,6 +636,7 @@ btnAddProductIn.addEventListener("click", (e) => {
             .then(data =>{
                 hideLoadingModal();
                 if(data.success){
+                    localStorage.setItem()
                     toast({ title: "Success", message: "Thêm sản phẩm thành công!", type: "success", duration: 3000 });
                     setDefaultValue();
                     document.querySelector(".add-product").classList.remove("open");
