@@ -1,4 +1,13 @@
 $(document).ready(function () {
+    function showLoadingModal() {
+        const modal = $("#loading-modal");
+        modal.css("display", "flex");
+    }
+
+    function hideLoadingModal() {
+        const modal = $("#loading-modal");
+        modal.css("display", "none");
+    }
     $('#sendCode-button').on('click', function (e) {
         e.preventDefault();
         const email = $('#forgotPasswordEmail').val();
@@ -7,6 +16,7 @@ $(document).ready(function () {
             return;
         }
         const sendCodeButton = $('#sendCode-button');
+        showLoadingModal();
         function startCountdown(duration) {
             let timeRemaining = duration;
             sendCodeButton.prop('disabled', true);
@@ -27,7 +37,7 @@ $(document).ready(function () {
             type: 'POST',
             data: { email: email },
             success: function (response) {
-                console.log(response);
+                hideLoadingModal();
                 if (response.success) {
                     toast({
                         title: "Success",
@@ -129,6 +139,7 @@ $(document).ready(function () {
                 $('.confirm-password-error').text("Mật khẩu không khớp. Vui lòng thử lại.");
                 return;
             }
+            showLoadingModal();
             $.ajax({
                 url: 'http://localhost:8080/user/forgot/reset/password',
                 type: 'POST',
@@ -139,7 +150,7 @@ $(document).ready(function () {
                 },
                 contentType: 'application/x-www-form-urlencoded',
                 success: function(response) {
-                    console.log(response);
+                    hideLoadingModal();
                     if (response.success) {
                         toast({
                             title: "Success",

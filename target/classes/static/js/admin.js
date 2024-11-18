@@ -553,7 +553,7 @@ btnUpdateProductIn.addEventListener("click", async (e) => {
 
 function showLoadingModal() {
     const modal = document.getElementById("loading-modal");
-    modal.style.display = "flex"; // Hiển thị modal loading
+    modal.style.display = "flex";
 }
 
 // Hàm để ẩn modal loading
