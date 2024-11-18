@@ -551,6 +551,17 @@ btnUpdateProductIn.addEventListener("click", async (e) => {
 
 });
 
+function showLoadingModal() {
+    const modal = document.getElementById("loading-modal");
+    modal.style.display = "flex"; // Hiển thị modal loading
+}
+
+// Hàm để ẩn modal loading
+function hideLoadingModal() {
+    const modal = document.getElementById("loading-modal");
+    modal.style.display = "none"; // Ẩn modal loading
+}
+
 // Thêm sản phẩm
 let btnAddProductIn = document.getElementById("add-product-button");
 btnAddProductIn.addEventListener("click", (e) => {
@@ -573,6 +584,8 @@ btnAddProductIn.addEventListener("click", (e) => {
             formData.append("price", parseInt(price));
             formData.append("description", moTa);
 
+            showLoadingModal();
+
             fetch('http://localhost:8080/products/admin/create', {
                 method: 'POST',
                 body: formData,
@@ -582,6 +595,7 @@ btnAddProductIn.addEventListener("click", (e) => {
             })
             .then(response => response.json())
             .then(data =>{
+                hideLoadingModal();
                 if(data.success){
                     toast({ title: "Success", message: "Thêm sản phẩm thành công!", type: "success", duration: 3000 });
                     setDefaultValue();
