@@ -19,47 +19,25 @@ public class CartController {
 
     @GetMapping("/get-cart/{userId}")
     public ResponseEntity<ResponseData> getCart(@PathVariable int userId) {
-        ResponseData responseData = new ResponseData();
-        CartDTO cartDTO = cartServiceImp.getAllCart(userId);
-        responseData.setData(cartDTO);
+        ResponseData responseData = cartServiceImp.getAllCart(userId);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
 
     @PostMapping("/insert")
     public ResponseEntity<?> insertCart(@RequestBody CartRequest cartRequest) {
-        ResponseData responseData=new ResponseData();
-        boolean isInserted=cartServiceImp.insertCart(cartRequest);
-        responseData.setData(isInserted);
+        ResponseData responseData = cartServiceImp.insertCart(cartRequest);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
 
     @DeleteMapping("/delete/{cartItemId}")
     public ResponseEntity<?> deleteCartItem(@PathVariable int cartItemId){
-        ResponseData responseData=new ResponseData();
-        boolean isDeleted = cartServiceImp.deleteCartItem(cartItemId);
-        responseData.setData(isDeleted);
+        ResponseData responseData = cartServiceImp.deleteCartItem(cartItemId);
         return new ResponseEntity<>(responseData,HttpStatus.OK);
     }
 
     @PostMapping("update/{cartItemId}/{quantity}")
     public ResponseEntity<?> updateCartItem(@PathVariable int cartItemId, @PathVariable int quantity){
-        ResponseData responseData=new ResponseData();
-        boolean isUpdated = cartServiceImp.updateQuantityCartItem(cartItemId, quantity);
-        responseData.setData(isUpdated);
+        ResponseData responseData = cartServiceImp.updateQuantityCartItem(cartItemId, quantity);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
-    }
-
-    @DeleteMapping("/deleteAll/{userId}")
-    public ResponseEntity<?> deleteAllCart(@PathVariable int userId){
-        ResponseData responseData=new ResponseData();
-        try {
-            cartServiceImp.deleteAllCart(userId);
-            responseData.setData(true);
-            return new ResponseEntity<>(responseData, HttpStatus.OK);
-        } catch (Exception e) {
-            responseData.setData(false);
-            responseData.setDescription(e.getMessage());
-            return new ResponseEntity<>(responseData, HttpStatus.OK);
-        }
     }
 }

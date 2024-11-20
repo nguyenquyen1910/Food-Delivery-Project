@@ -297,6 +297,7 @@ $(document).ready(function () {
     } else if (ctDon.status == 1) {
       classDetailBtn = "btn-daxuly";
       textDetailBtn = "Đã xử lý";
+      disabledAttr = "disabled";
     } else if (ctDon.status == -1) {
       classDetailBtn = "btn-dahuy";
       textDetailBtn = "Đã hủy đơn";
@@ -304,8 +305,11 @@ $(document).ready(function () {
     }
 
     let cancelButton = "";
-    if (ctDon.status != -1) {
-      cancelButton = `<button class="modal-detail-btn btn-delete" onclick="cancelOrder('${ctDon.orderId}', this)">Hủy đơn hàng</button>`;
+    if (ctDon.status == 0) {
+      cancelButton = `<button class="modal-detail-btn btn-delete" onclick="cancelOrder('${ctDon.orderId}', this)">Hủy đơn hàng</button>`
+    }
+    else if (ctDon.status == 1) {
+      cancelButton = `<button class="modal-detail-btn btn-delete" disabled title="Không thể hủy đơn hàng đã xử lý">Hủy đơn hàng</button>`;
     }
 
     $(".modal-detail-bottom").html(`

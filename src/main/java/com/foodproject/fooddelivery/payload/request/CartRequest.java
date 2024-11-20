@@ -1,11 +1,8 @@
 package com.foodproject.fooddelivery.payload.request;
 
-import java.util.List;
-
 public class CartRequest {
     private int userId;
-    private List<CartItemRequest> listItems;
-    private int status;
+    CartItemRequest cartItemRequest;
 
     public int getUserId() {
         return userId;
@@ -15,20 +12,11 @@ public class CartRequest {
         this.userId = userId;
     }
 
-    public List<CartItemRequest> getListItems() {
-        return listItems;
+    public CartItemRequest getCartItemRequest() {
+        return cartItemRequest;
     }
 
-    public void setListItems(List<CartItemRequest> listItems) {
-        this.listItems = listItems;
+    public void setCartItemRequest(CartItemRequest cartItemRequest) {
+        this.cartItemRequest = cartItemRequest;
     }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status = status;
-    }
-
 }

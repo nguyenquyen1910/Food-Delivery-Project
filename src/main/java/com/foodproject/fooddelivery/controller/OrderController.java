@@ -2,6 +2,7 @@ package com.foodproject.fooddelivery.controller;
 
 import com.foodproject.fooddelivery.dto.OrderDTO;
 import com.foodproject.fooddelivery.payload.ResponseData;
+import com.foodproject.fooddelivery.payload.request.OrderInCartRequest;
 import com.foodproject.fooddelivery.payload.request.OrderRequest;
 import com.foodproject.fooddelivery.service.imp.OrderServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,18 +23,13 @@ public class OrderController {
 
     @GetMapping("/admin/getall")
     public ResponseEntity<?> getAll(){
-        ResponseData responseData = new ResponseData();
-        List<OrderDTO> orderDTOList = orderServiceImp.getAll();
-        responseData.setData(orderDTOList);
-        responseData.setSuccess(true);
+        ResponseData responseData = orderServiceImp.getAll();
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
 
     @GetMapping("/get/{userId}")
     public ResponseEntity<?> getOrder(@PathVariable int userId) {
-        ResponseData responseData = new ResponseData();
-        List<OrderDTO> orderDTOs = orderServiceImp.getAllOrders(userId);
-        responseData.setData(orderDTOs);
+        ResponseData responseData = orderServiceImp.getAllOrders(userId);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
 
@@ -47,9 +43,13 @@ public class OrderController {
 
     @PostMapping("/insert")
     public ResponseEntity<?> insert(@RequestBody OrderRequest orderRequest) {
-        ResponseData responseData = new ResponseData();
-        boolean isSuccess = orderServiceImp.insertOrder(orderRequest);
-        responseData.setData(isSuccess);
+        ResponseData responseData = orderServiceImp.insertOrder(orderRequest);
+        return new ResponseEntity<>(responseData, HttpStatus.OK);
+    }
+
+    @PostMapping("/insert/checkout")
+    public ResponseEntity<?> insertCheckout(@RequestBody OrderInCartRequest orderInCartRequest) {
+        ResponseData responseData = orderServiceImp.checkOutInCart(orderInCartRequest);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
 

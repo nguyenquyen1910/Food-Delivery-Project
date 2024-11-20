@@ -12,9 +12,9 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "user_id")
-    private Users users;
+    private Users user;
 
     @Column(name = "totalPrice")
     private int totalPrice;
@@ -36,12 +36,12 @@ public class Cart {
         this.id = id;
     }
 
-    public Users getUsers() {
-        return users;
+    public Users getUser() {
+        return user;
     }
 
-    public void setUsers(Users users) {
-        this.users = users;
+    public void setUser(Users user) {
+        this.user = user;
     }
 
     public int getTotalPrice() {

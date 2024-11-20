@@ -4,7 +4,6 @@ let selectedDate;
 // Trang thanh toan
 async function thanhtoanpage(option,product) {
     let currentUser = JSON.parse(localStorage.getItem('currentuser'));
-    // Xu ly ngay nhan hang
     let today = new Date();
     let ngaymai = new Date();
     let ngaykia = new Date();
@@ -44,60 +43,35 @@ async function thanhtoanpage(option,product) {
 
     let totalBillOrder = document.querySelector('.total-bill-order');
     let totalBillOrderHtml;
-    let amount=0;
-    try {
-        const response = await fetch(`http://localhost:8080/cart/get-cart/${currentUser.id}`);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const result = await response.json();
-        amount = result.data.cartItems.length;
-    } catch (error) {
-        console.error("Có lỗi xảy ra trong quá trình lấy sản phẩm:", error);
-    }
     // Xu ly don hang
     switch (option) {
-        case 1: // Truong hop thanh toan san pham trong gio
-            // Hien thi don hang
-            showProductCart();
+        case 1: // Truong hop thanh toan san pham trong gio hang
+            await showProductCart();
             // Tinh tien
-            totalBillOrderHtml = `<div class="priceFlx">
-            <div class="text">
-                Tiền hàng 
-                <span class="count">${amount} món</span>
-            </div>
-            <div class="price-detail">
-                <span id="checkout-cart-total">${vnd(getCartTotal())}</span>
-            </div>
-        </div>
-        <div class="priceFlx chk-ship">
-            <div class="text">Phí vận chuyển</div>
-            <div class="price-detail chk-free-ship">
-                <span>${vnd(PHIVANCHUYEN)}</span>
-            </div>
-        </div>`;
+            totalBillOrderHtml = `
+                <div class="priceFlx">
+                    <div class="text">Tiền hàng</div>
+                    <div class="price-detail"><span id="checkout-cart-total">${vnd(getCartTotal())}</span></div>
+                </div>
+                <div class="priceFlx chk-ship">
+                    <div class="text">Phí vận chuyển</div>
+                    <div class="price-detail chk-free-ship"><span>${vnd(PHIVANCHUYEN)}</span></div>
+                </div>`;
             // Tong tien
             priceFinal.innerText = vnd(getCartTotal() + PHIVANCHUYEN);
             break;
         case 2: // Truong hop mua ngay
-            // Hien thi san pham
             showProductBuyNow(product);
             // Tinh tien
-            totalBillOrderHtml = `<div class="priceFlx">
-                <div class="text">
-                    Tiền hàng 
-                    <span class="count">1 món</span>
+            totalBillOrderHtml = `
+                <div class="priceFlx">
+                    <div class="text">Tiền hàng</div>
+                    <div class="price-detail"><span id="checkout-cart-total">${vnd(product.soluong * product.price)}</span></div>
                 </div>
-                <div class="price-detail">
-                    <span id="checkout-cart-total">${vnd(product.soluong * product.price)}</span>
-                </div>
-            </div>
-            <div class="priceFlx chk-ship">
-                <div class="text">Phí vận chuyển</div>
-                <div class="price-detail chk-free-ship">
-                    <span>${vnd(PHIVANCHUYEN)}</span>
-                </div>
-            </div>`
+                <div class="priceFlx chk-ship">
+                    <div class="text">Phí vận chuyển</div>
+                    <div class="price-detail chk-free-ship"><span>${vnd(PHIVANCHUYEN)}</span></div>
+                </div>`;
             // Tong tien
             priceFinal.innerText = vnd((product.soluong * product.price) + PHIVANCHUYEN);
             break;
@@ -150,10 +124,10 @@ async function thanhtoanpage(option,product) {
     document.querySelector(".complete-checkout-btn").onclick = () => {
         switch (option) {
             case 1:
-                xulyDathang();
+                thanhToanGioHang();
                 break;
             case 2:
-                xulyDathang(product);
+                thanhToanSanPham(product);
                 break;
         }
     }
@@ -250,8 +224,104 @@ function closecheckout() {
     body.style.overflow = "auto"
 }
 
+// Mua hang truc tiep
+async function thanhToanSanPham(product) {
+    let diachinhan = "";
+    let hinhthucgiao = "";
+    let thoigiangiao = "";
+    let giaotannoi = document.querySelector("#giaotannoi");
+    let tudenlay = document.querySelector("#tudenlay");
+    let giaongay = document.querySelector("#giaongay");
+    let giaovaogio = document.querySelector("#deliverytime");
+    let ghichudon = "";
+    let currentUser = JSON.parse(localStorage.getItem('currentuser'));
+
+    // Xử lý hình thức giao hàng & địa chỉ nhận
+    if (giaotannoi.classList.contains("active")) {
+        diachinhan = document.querySelector("#diachinhan").value;
+        hinhthucgiao = giaotannoi.innerText;
+    }
+    if (tudenlay.classList.contains("active")) {
+        let chinhanh1 = document.querySelector("#chinhanh-1");
+        let chinhanh2 = document.querySelector("#chinhanh-2");
+        diachinhan = "Tự đến tại quầy";
+        if (chinhanh1.checked) {
+            diachinhan = "Học viện Công nghệ Bưu Chính Viễn Thông 1";
+        }
+        if (chinhanh2.checked) {
+            diachinhan = "Học viện Công nghệ Bưu Chính Viễn Thông 2";
+        }
+        hinhthucgiao = tudenlay.innerText;
+    }
+
+    // Xử lý thời gian giao hàng
+    if (giaongay.checked) {
+        thoigiangiao = "Giao ngay khi xong";
+    }
+    if (giaovaogio.checked) {
+        thoigiangiao = document.querySelector(".choise-time").value;
+    }
+    let tennguoinhan = document.querySelector("#tennguoinhan").value;
+    let sdtnhan = document.querySelector("#sdtnhan").value;
+    ghichudon = document.querySelector(".note-order").value;
+    if (ghichudon == "") {
+        ghichudon = "Không có ghi chú";
+    }
+    thoigiangiao += " " + selectedDate;
+
+    // Kiểm tra thông tin đầu vào
+    if (!tennguoinhan || !sdtnhan || !diachinhan || !thoigiangiao || !product) {
+        toast({
+            title: 'Warning',
+            message: 'Vui lòng điền đầy đủ thông tin người nhận và sản phẩm!',
+            type: 'warning',
+            duration: 2000
+        });
+        return;
+    }
+    let orderRequest = {
+        userId: currentUser.id,
+        shippingMethod: hinhthucgiao,
+        deliveryAddress: diachinhan,
+        recipientName: tennguoinhan,
+        recipientPhone: sdtnhan,
+        expectedDeliveryDate: thoigiangiao,
+        noteOrder: ghichudon,
+        orderItemRequest: {
+            productId: product.id,
+            quantity: product.soluong,
+            note: product.note || "Không có ghi chú",
+        }
+    }
+
+    fetch('http://localhost:8080/order/insert', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderRequest),
+    })
+        .then(response => {
+            return response.json();
+        })
+        .then(async data => {
+            if (data.success) {
+                toast({ title: 'Thành công', message: 'Đặt hàng thành công !', type: 'success', duration: 1000 });
+                setTimeout(() => {
+                    window.location = "/index";
+                }, 2000);
+            } else {
+                toast({ title: 'Thất bại', message: 'Đặt hàng không thành công !', type: 'error', duration: 4000 });
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi:', error);
+            toast({ title: 'Lỗi', message: 'Có lỗi xảy ra, vui lòng thử lại !', type: 'error', duration: 4000 });
+        });
+}
+
 // Thong tin cac don hang da mua - Xu ly khi nhan nut dat hang
-async function xulyDathang(product) {
+async function thanhToanGioHang() {
     let diachinhan = "";
     let hinhthucgiao = "";
     let thoigiangiao = "";
@@ -289,55 +359,6 @@ async function xulyDathang(product) {
         thoigiangiao = document.querySelector(".choise-time").value;
     }
 
-    let products=[];
-
-    try {
-        if(product==undefined){
-            let response = await fetch(`http://localhost:8080/cart/get-cart/${currentUser.id}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem("token")}`
-                }
-            });
-
-            if (response.ok) {
-                let cartData = await response.json();
-                let cart = cartData.data.cartItems;
-                let tongtien = 0;
-
-                if (cart.length === 0) {
-                    toast({ title: 'Chú ý', message: 'Giỏ hàng trống! Không thể đặt hàng.', type: 'warning', duration: 4000 });
-                    return;
-                }
-
-                products = cart.map(item => ({
-                    productId: item.product.id,
-                    quantity: item.quantity,
-                    note: item.note
-                }));
-            } else {
-                console.error('Failed to fetch cart items from backend');
-                toast({ title: 'Lỗi', message: 'Không thể tải giỏ hàng!', type: 'error', duration: 4000 });
-            }
-        } else {
-            let noteSolve="";
-            if(product.note == ""){
-                noteSolve = "Không có ghi chú";
-            }
-            else{
-                noteSolve = product.note;
-            }
-            products.push({
-                productId: product.id,
-                quantity: product.soluong,
-                note: noteSolve
-            });
-        }
-
-    } catch (error) {
-        console.error('Error fetching cart:', error);
-        toast({ title: 'Lỗi', message: 'Lỗi kết nối đến server!', type: 'error', duration: 4000 });
-    }
     let tennguoinhan = document.querySelector("#tennguoinhan").value;
     let sdtnhan = document.querySelector("#sdtnhan").value;
     ghichudon = document.querySelector(".note-order").value;
@@ -348,63 +369,39 @@ async function xulyDathang(product) {
     if (tennguoinhan === "" || sdtnhan === "" || diachinhan === "") {
         toast({ title: 'Chú ý', message: 'Vui lòng nhập đầy đủ thông tin !', type: 'warning', duration: 4000 });
     } else {
-        let orderRequest = {
-            userId: currentUser.id, 
+        let orderInCartRequest = {
+            userId: currentUser.id,
             shippingMethod: hinhthucgiao,
             deliveryAddress: diachinhan,
             recipientName: tennguoinhan,
             recipientPhone: sdtnhan,
             expectedDeliveryDate: thoigiangiao,
-            products: products,
-            status: 0,
-            noteOrder: ghichudon
+            noteOrder: ghichudon,
         };
-        fetch('http://localhost:8080/order/insert', {
+
+        fetch('http://localhost:8080/order/insert/checkout', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(orderRequest),
+            body: JSON.stringify(orderInCartRequest),
         })
         .then(response => {
             return response.json();
         })
         .then(async data => {
             if (data.success) {
-                toast({ title: 'Thành công', message: 'Đặt hàng thành công !', type: 'success', duration: 1000 });
-                await deleteCart(currentUser.id);
+                toast({ title: 'Thành công', message: 'Thanh toán giỏ hàng thành công !', type: 'success', duration: 1000 });
                 setTimeout(() => {
                     window.location = "/index";
                 }, 2000);
             } else {
-                toast({ title: 'Thất bại', message: 'Đặt hàng không thành công !', type: 'error', duration: 4000 });
+                toast({ title: 'Thất bại', message: 'Thanh tóan giỏ hàng thất bại !', type: 'error', duration: 2000 });
             }
         })
         .catch(error => {
             console.error('Lỗi:', error);
-            toast({ title: 'Lỗi', message: 'Có lỗi xảy ra, vui lòng thử lại !', type: 'error', duration: 4000 });
+            toast({ title: 'Lỗi', message: 'Có lỗi xảy ra, vui lòng thử lại !', type: 'error', duration: 2000 });
         });
     }
-}
-
-// Hàm xóa giỏ hàng
-async function deleteCart(userId) {
-    try {
-        let response = await fetch(`http://localhost:8080/cart/deleteAll/${userId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem("token")}`
-            }
-        });
-    } catch (error) {
-        console.error('Lỗi kết nối khi xóa giỏ hàng:', error);
-    }
-}
-
-function getpriceProduct(id) {
-    let products = JSON.parse(localStorage.getItem('products'));
-    let sp = products.find(item => {
-        return item.id == id;
-    })
-    return sp.price;
 }

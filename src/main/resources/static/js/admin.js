@@ -395,6 +395,7 @@ function deleteProduct(id) {
         .then(response => response.json())
         .then(data => {
             let products = data.data;
+            localStorage.setItem("products", JSON.stringify(products));
             let index = products.findIndex(item => item.id == id);
 
             if (index === -1) {
@@ -538,7 +539,7 @@ btnUpdateProductIn.addEventListener("click", async (e) => {
 
     let imageChange = imgProductCur.files.length > 0;
 
-    if (imageChange || titleProductCur != titleProduct || curProductCur != curProduct || descProductCur != descProduct || getCategoryValueByName(categoryId) != categoryProduct) {
+    if (imageChange || titleProductCur !== titleProduct || parseInt(curProductCur) !== parseInt(curProduct) || descProductCur !== descProduct || parseInt(getCategoryValueByName(categoryProduct)) !== categoryId) {
         let formData = new FormData();
         if (imageChange) {
             formData.append("file", imgProductCur.files[0]);
@@ -560,7 +561,7 @@ btnUpdateProductIn.addEventListener("click", async (e) => {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.data) {
+            if (data.success) {
                 products[indexCur].title = titleProductCur;
                 products[indexCur].price = parseInt(curProductCur);
                 products[indexCur].description = descProductCur;
@@ -586,8 +587,6 @@ btnUpdateProductIn.addEventListener("click", async (e) => {
     } else {
         toast({ title: "Warning", message: "Sản phẩm của bạn không thay đổi!", type: "warning", duration: 3000, });
     }
-
-
 });
 
 function showLoadingModal() {
@@ -635,8 +634,11 @@ btnAddProductIn.addEventListener("click", (e) => {
             .then(response => response.json())
             .then(data =>{
                 hideLoadingModal();
+                console.log(data);
                 if(data.success){
-                    localStorage.setItem()
+                    let products = JSON.parse(localStorage.getItem('products'));
+                    products.push(data.data);
+                    localStorage.setItem("products", JSON.stringify(products));
                     toast({ title: "Success", message: "Thêm sản phẩm thành công!", type: "success", duration: 3000 });
                     setDefaultValue();
                     document.querySelector(".add-product").classList.remove("open");
@@ -975,7 +977,6 @@ function editAccount(phone) {
 updateAccount.addEventListener("click", (e) => {
     e.preventDefault();
     let accounts = JSON.parse(localStorage.getItem("accounts"));
-    console.log(indexFlag);
     let isAdminChecked = document.querySelector('#role-admin').checked;
     let roleId = isAdminChecked ? 1 : 2;
     let editUserRequest = {
@@ -998,7 +999,6 @@ updateAccount.addEventListener("click", (e) => {
         }
     })
     .then(data => {
-        console.log(data);
         toast({ title: 'Thành công', message: 'Thay đổi quyền thành công !', type: 'success', duration: 3000 });
         localStorage.setItem("accounts", JSON.stringify(accounts));
         document.querySelector(".signup").classList.remove("open");

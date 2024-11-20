@@ -3,27 +3,23 @@ package com.foodproject.fooddelivery.service;
 import com.foodproject.fooddelivery.dto.OrderDTO;
 import com.foodproject.fooddelivery.dto.OrderItemDTO;
 import com.foodproject.fooddelivery.dto.ProductDTO;
-import com.foodproject.fooddelivery.entity.OrderItem;
-import com.foodproject.fooddelivery.entity.Orders;
-import com.foodproject.fooddelivery.entity.Product;
-import com.foodproject.fooddelivery.entity.Users;
+import com.foodproject.fooddelivery.entity.*;
 import com.foodproject.fooddelivery.entity.keys.KeyOrderItem;
 import com.foodproject.fooddelivery.mapper.OrderMapper;
-import com.foodproject.fooddelivery.payload.request.OrderItemRequest;
+import com.foodproject.fooddelivery.payload.ResponseData;
+import com.foodproject.fooddelivery.payload.request.OrderInCartRequest;
 import com.foodproject.fooddelivery.payload.request.OrderRequest;
-import com.foodproject.fooddelivery.repository.OrderItemRepository;
-import com.foodproject.fooddelivery.repository.OrderRepository;
-import com.foodproject.fooddelivery.repository.ProductRepository;
-import com.foodproject.fooddelivery.repository.UsersRepository;
+import com.foodproject.fooddelivery.repository.*;
 import com.foodproject.fooddelivery.service.imp.OrderServiceImp;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderService implements OrderServiceImp {
@@ -42,9 +38,12 @@ public class OrderService implements OrderServiceImp {
 
     @Autowired
     OrderMapper orderMapper;
+    @Autowired
+    private CartRepository cartRepository;
 
     @Override
-    public List<OrderDTO> getAll() {
+    public ResponseData getAll() {
+        ResponseData responseData = new ResponseData();
         List<Orders> ordersList = orderRepository.findAll();
         List<OrderDTO> orderDTOs = new ArrayList<>();
         for (Orders orders : ordersList) {
@@ -55,12 +54,20 @@ public class OrderService implements OrderServiceImp {
             orderDTO.setUserFullName(user.getFullName());
             orderDTOs.add(orderDTO);
         }
-        return orderDTOs;
+        responseData.setSuccess(true);
+        responseData.setData(orderDTOs);
+        return responseData;
     }
 
     @Override
-    public List<OrderDTO> getAllOrders(int userId) {
+    public ResponseData getAllOrders(int userId) {
+        ResponseData responseData = new ResponseData();
         Users user = usersRepository.findById(userId);
+        if (user == null) {
+            responseData.setSuccess(false);
+            responseData.setDescription("User not found");
+            return responseData;
+        }
         List<Orders> ordersList = orderRepository.findByUsers(user);
         List<OrderDTO> orderDTOs = new ArrayList<>();
 
@@ -71,8 +78,9 @@ public class OrderService implements OrderServiceImp {
             orderDTO.setUserFullName(user.getFullName());
             orderDTOs.add(orderDTO);
         }
-
-        return orderDTOs;
+        responseData.setSuccess(true);
+        responseData.setData(orderDTOs);
+        return responseData;
     }
 
 
@@ -94,10 +102,10 @@ public class OrderService implements OrderServiceImp {
         orderDTO.setUserFullName(orders.get().getUsers().getFullName());
         orderDTO.setUserName(orders.get().getUsers().getUserName());
         List<OrderItemDTO> orderItemDTOS = new ArrayList<>();
-        for(OrderItem orderItem : orders.get().getOrderItem()){
+        for (OrderItem orderItem : orders.get().getOrderItem()) {
             OrderItemDTO orderItemDTO = new OrderItemDTO();
             Product product = productRepository.findById(orderItem.getProduct().getId());
-            KeyOrderItem keyOrderItem = new KeyOrderItem(orderItem.getOrders().getId(),product.getId());
+            KeyOrderItem keyOrderItem = new KeyOrderItem(orderItem.getOrders().getId(), product.getId());
             orderItemDTO.setKeyOrderItem(keyOrderItem);
             ProductDTO productDTO = new ProductDTO();
             productDTO.setId(product.getId());
@@ -118,41 +126,109 @@ public class OrderService implements OrderServiceImp {
     }
 
     @Override
-    public boolean insertOrder(OrderRequest orderRequest) {
-        try {
-            Users user = usersRepository.findById(orderRequest.getUserId());
-            Orders orders = new Orders();
-            orders.setUsers(user);
-            orders.setStatus(orderRequest.getStatus());
-            orders.setCreateDate(new Timestamp(System.currentTimeMillis()));
-            orders.setShippingMethod(orderRequest.getShippingMethod());
-            orders.setDeliveryAddress(orderRequest.getDeliveryAddress());
-            orders.setRecipientName(orderRequest.getRecipientName());
-            orders.setRecipientPhone(orderRequest.getRecipientPhone());
-            orders.setExpectedDeliveryDate(orderRequest.getExpectedDeliveryDate());
-            orders.setNoteOrder(orderRequest.getNoteOrder());
-            Orders savedOrder = orderRepository.save(orders);
-            int totalPrice=0;
-            for(OrderItemRequest orderItemRequest : orderRequest.getProducts()){
-                Product product = productRepository.findById(orderItemRequest.getProductId());
-                OrderItem orderItem = new OrderItem();
-                KeyOrderItem keyOrderItem = new KeyOrderItem(savedOrder.getId(),product.getId());
-                orderItem.setKeyOrderItem(keyOrderItem);
-                orderItem.setOrders(savedOrder);
-                orderItem.setProduct(product);
-                orderItem.setQuantity(orderItemRequest.getQuantity());
-                orderItem.setNote(orderItemRequest.getNote());
-                orderItem.setCreateDate(new Timestamp(System.currentTimeMillis()));
-                totalPrice += product.getPrice() * orderItemRequest.getQuantity();
-                orderItemRepository.save(orderItem);
-            }
-            orders.setPrice(totalPrice);
-            orderRepository.save(orders);
-            return true;
-        }catch (Exception e){
-            System.out.println("Error insert order" + e.getMessage());
-            return false;
+    @Transactional
+    public ResponseData insertOrder(OrderRequest orderRequest) {
+        ResponseData responseData = new ResponseData();
+        Users user = usersRepository.findById(orderRequest.getUserId());
+        if(user == null) {
+            responseData.setSuccess(false);
+            responseData.setDescription("User not found");
+            return responseData;
         }
+
+        Product product = productRepository.findById(orderRequest.getOrderItemRequest().getProductId());
+        if(product == null) {
+            responseData.setSuccess(false);
+            responseData.setDescription("Product not found");
+            return responseData;
+        }
+
+        Orders orders = new Orders();
+        orders.setUsers(user);
+        orders.setCreateDate(new Date());
+        orders.setShippingMethod(orderRequest.getShippingMethod());
+        orders.setDeliveryAddress(orderRequest.getDeliveryAddress());
+        orders.setRecipientName(orderRequest.getRecipientName());
+        orders.setRecipientPhone(orderRequest.getRecipientPhone());
+        orders.setExpectedDeliveryDate(orderRequest.getExpectedDeliveryDate());
+        orders.setNoteOrder(orderRequest.getNoteOrder());
+        orders.setPrice(product.getPrice() * orderRequest.getOrderItemRequest().getQuantity());
+        Orders savedOrder = orderRepository.save(orders);
+
+        OrderItem orderItem = new OrderItem();
+        KeyOrderItem keyOrderItem = new KeyOrderItem(savedOrder.getId(), product.getId());
+        orderItem.setKeyOrderItem(keyOrderItem);
+        orderItem.setOrders(savedOrder);
+        orderItem.setProduct(product);
+        orderItem.setQuantity(orderRequest.getOrderItemRequest().getQuantity());
+        orderItem.setNote(orderRequest.getOrderItemRequest().getNote());
+        orderItem.setCreateDate(new Date());
+        orderItemRepository.save(orderItem);
+
+        responseData.setSuccess(true);
+        responseData.setDescription("Success");
+        return responseData;
+    }
+
+    @Override
+    @Transactional
+    public ResponseData checkOutInCart(OrderInCartRequest orderInCartRequest) {
+        ResponseData responseData = new ResponseData();
+        Users user = usersRepository.findById(orderInCartRequest.getUserId());
+        if(user==null){
+            responseData.setSuccess(false);
+            responseData.setDescription("User is null");
+            return responseData;
+        }
+        Cart cart = cartRepository.findByUser(user);
+        if(cart==null){
+            cart = new Cart();
+            cart.setStatus(1);
+            cart.setUser(user);
+            cart.setCreateDate(new Date());
+            cart.setCartItems(new ArrayList<>());
+            cart.setTotalPrice(0);
+            cartRepository.save(cart);
+        }
+        if(cart.getCartItems().isEmpty()){
+            responseData.setSuccess(false);
+            responseData.setDescription("Cart is empty");
+            return responseData;
+        }
+        Orders order = new Orders();
+        order.setUsers(user);
+        order.setStatus(0);
+        order.setCreateDate(cart.getCreateDate());
+        order.setShippingMethod(orderInCartRequest.getShippingMethod());
+        order.setDeliveryAddress(orderInCartRequest.getDeliveryAddress());
+        order.setRecipientName(orderInCartRequest.getRecipientName());
+        order.setRecipientPhone(orderInCartRequest.getRecipientPhone());
+        order.setExpectedDeliveryDate(orderInCartRequest.getExpectedDeliveryDate());
+        order.setNoteOrder(orderInCartRequest.getNoteOrder());
+        order.setPrice(cart.getTotalPrice());
+        Orders orderSaved = orderRepository.save(order);
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (CartItem cartItem : cart.getCartItems()) {
+            OrderItem orderItem = new OrderItem();
+            KeyOrderItem keyOrderItem = new KeyOrderItem(orderSaved.getId(), cartItem.getProduct().getId());
+            orderItem.setKeyOrderItem(keyOrderItem);
+            orderItem.setProduct(cartItem.getProduct());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setNote(cartItem.getNote());
+            orderItem.setCreateDate(new Date());
+            orderItem.setOrders(orderSaved);
+            orderItems.add(orderItem);
+        }
+        orderItemRepository.saveAll(orderItems);
+
+        cart.getCartItems().clear();
+        cart.setTotalPrice(0);
+        cartRepository.save(cart);
+
+        responseData.setSuccess(true);
+        responseData.setDescription("Success");
+        return responseData;
     }
 
     @Override

@@ -1,15 +1,10 @@
 package com.foodproject.fooddelivery.service.imp;
 
 import com.foodproject.fooddelivery.dto.UsersDTO;
-import com.foodproject.fooddelivery.entity.Users;
 import com.foodproject.fooddelivery.payload.ResponseData;
 import com.foodproject.fooddelivery.payload.request.ChangeInfoRequest;
 import com.foodproject.fooddelivery.payload.request.ChangePasswordRequest;
 import com.foodproject.fooddelivery.payload.request.EditUserRequest;
-import jakarta.transaction.Transactional;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 

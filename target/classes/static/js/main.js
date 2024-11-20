@@ -48,24 +48,21 @@ function animationCart() {
 
 // Them SP vao gio hang
 async function addCart(index) {
-  let currentuser = localStorage.getItem("currentuser")
-    ? JSON.parse(localStorage.getItem("currentuser"))
-    : [];
+  let currentuser = JSON.parse(localStorage.getItem("currentuser"));
   let soluong = $(".input-qty").val();
   let popupDetailNote = $("#popup-detail-note").val();
   let note = popupDetailNote === "" ? "Không có ghi chú" : popupDetailNote;
 
-  let productcart = {
+  let cartItemRequest = {
     productId: index,
     quantity: parseInt(soluong),
     note: note,
-  };
+  }
 
   try {
     let cartRequest = {
       userId: currentuser.id,
-      listItems: [productcart],
-      status: 1,
+      cartItemRequest: cartItemRequest
     };
     const response = await fetch(`http://localhost:8080/cart/insert`, {
       method: "POST",

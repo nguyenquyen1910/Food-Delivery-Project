@@ -1,13 +1,9 @@
 package com.foodproject.fooddelivery.payload.request;
 
-import com.foodproject.fooddelivery.entity.Product;
-
-import java.util.Date;
 import java.util.List;
 
-public class OrderRequest {
+public class OrderInCartRequest {
     private int userId;
-    private OrderItemRequest orderItemRequest;
     private String shippingMethod;
     private String deliveryAddress;
     private String recipientName;
@@ -21,14 +17,6 @@ public class OrderRequest {
 
     public void setUserId(int userId) {
         this.userId = userId;
-    }
-
-    public OrderItemRequest getOrderItemRequest() {
-        return orderItemRequest;
-    }
-
-    public void setOrderItemRequest(OrderItemRequest orderItemRequest) {
-        this.orderItemRequest = orderItemRequest;
     }
 
     public String getShippingMethod() {

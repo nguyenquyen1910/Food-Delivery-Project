@@ -2,7 +2,6 @@ package com.foodproject.fooddelivery.service;
 
 import com.foodproject.fooddelivery.dto.PageProductDTO;
 import com.foodproject.fooddelivery.dto.ProductDTO;
-import com.foodproject.fooddelivery.entity.Category;
 import com.foodproject.fooddelivery.entity.Product;
 import com.foodproject.fooddelivery.mapper.ProductMapper;
 import com.foodproject.fooddelivery.payload.ResponseData;
@@ -18,10 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class ProductService implements ProductServiceImp {
@@ -36,18 +32,19 @@ public class ProductService implements ProductServiceImp {
     CategoryRepository categoryRepository;
 
     @Override
-    public Map<String, Object> addProduct(MultipartFile file,
+    public ResponseData addProduct(MultipartFile file,
                             String title,
                             Integer categoryId,
                             Integer price,
                             String description) {
-        Map<String,Object> response=new HashMap<>();
+        ResponseData responseData = new ResponseData();
         try{
-            Optional<Product> existProduct = productRepository.findByTitleAndCategoryId(title, categoryId);
-            if(existProduct.isPresent()){
-                response.put("isInserted",false);
-                response.put("isExist",true);
-                return response;
+            Product existProduct = productRepository.findByTitleAndCategoryId(title, categoryId);
+            if(existProduct != null){
+                responseData.setSuccess(false);
+                responseData.setExist(true);
+                responseData.setDescription("Product already exists");
+                return responseData;
             }
             Product product = new Product();
             product.setTitle(title);
@@ -58,12 +55,14 @@ public class ProductService implements ProductServiceImp {
             ResponseData responseUploadImage = fileServiceImp.uploadFileCloudinary(file);
             product.setImage(responseUploadImage.getData().toString());
             productRepository.save(product);
-            response.put("isInserted",true);
-            response.put("isExist",false);
+            responseData.setSuccess(true);
+            responseData.setExist(false);
+            responseData.setData(ProductMapper.toProductDTO(product));
         }catch (Exception e){
-            System.out.println("Error Save Product "+e.getMessage());
+            responseData.setSuccess(false);
+            responseData.setDescription("Fail");
         }
-        return response;
+        return responseData;
     }
 
     @Override
@@ -107,35 +106,36 @@ public class ProductService implements ProductServiceImp {
     }
 
     @Override
-    public boolean updateProduct(MultipartFile file,
+    public ResponseData updateProduct(MultipartFile file,
                                  int productId,
                                  String title,
                                  int categoryId,
                                  Integer price,
                                  String description,
                                  String oldImage) {
-        boolean isUpdated = false;
-        try {
-            Product product = productRepository.findById(productId);
-            product.setTitle(title);
-            product.setDescription(description);
-            product.setPrice(price);
-            product.setStatus(1);
-            product.setCategory(categoryRepository.findById(categoryId));
-            if(file != null && !file.isEmpty()){
-                ResponseData responseUploadImage = fileServiceImp.uploadFileCloudinary(file);
-                product.setImage(responseUploadImage.getData().toString());
-            }
-            else{
-                product.setImage(oldImage);
-            }
-
-            productRepository.save(product);
-            isUpdated=true;
-        } catch (Exception e) {
-            System.out.println("Error updating product: " + e.getMessage());
+        ResponseData responseData = new ResponseData();
+        Product product = productRepository.findById(productId);
+        if(product==null) {
+            responseData.setSuccess(false);
+            responseData.setDescription("Product not found");
+            return responseData;
         }
-        return isUpdated;
+        product.setTitle(title);
+        product.setDescription(description);
+        product.setPrice(price);
+        product.setStatus(1);
+        product.setCategory(categoryRepository.findById(categoryId));
+        if(file != null && !file.isEmpty()){
+            ResponseData responseUploadImage = fileServiceImp.uploadFileCloudinary(file);
+            product.setImage(responseUploadImage.getData().toString());
+        }
+        else{
+            product.setImage(oldImage);
+        }
+        productRepository.save(product);
+        responseData.setSuccess(true);
+        responseData.setDescription("Success");
+        return responseData;
     }
 
     @Override

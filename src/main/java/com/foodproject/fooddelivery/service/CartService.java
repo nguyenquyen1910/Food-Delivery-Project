@@ -8,6 +8,7 @@ import com.foodproject.fooddelivery.entity.CartItem;
 import com.foodproject.fooddelivery.entity.Product;
 import com.foodproject.fooddelivery.entity.Users;
 import com.foodproject.fooddelivery.mapper.ProductMapper;
+import com.foodproject.fooddelivery.payload.ResponseData;
 import com.foodproject.fooddelivery.payload.request.CartItemRequest;
 import com.foodproject.fooddelivery.payload.request.CartRequest;
 import com.foodproject.fooddelivery.repository.CartItemRepository;
@@ -15,11 +16,9 @@ import com.foodproject.fooddelivery.repository.CartRepository;
 import com.foodproject.fooddelivery.repository.ProductRepository;
 import com.foodproject.fooddelivery.repository.UsersRepository;
 import com.foodproject.fooddelivery.service.imp.CartServiceImp;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -41,12 +40,19 @@ public class CartService implements CartServiceImp {
 
 
     @Override
-    public CartDTO getAllCart(int userId) {
-        Cart cart=cartRepository.findByUsersId(userId);
+    public ResponseData getAllCart(int userId) {
+        ResponseData responseData = new ResponseData();
+        Users user = usersRepository.findById(userId);
+        if(user==null){
+            responseData.setSuccess(false);
+            responseData.setDescription("User not found");
+            return responseData;
+        }
+        Cart cart=cartRepository.findByUser(user);
         if (cart == null) {
             cart = new Cart();
             cart.setStatus(1);
-            cart.setUsers(usersRepository.findById(userId));
+            cart.setUser(user);
             cart.setCreateDate(new Date());
             cart.setCartItems(new ArrayList<>());
             cartRepository.save(cart);
@@ -56,7 +62,6 @@ public class CartService implements CartServiceImp {
         cartDTO.setStatus(cart.getStatus());
         cartDTO.setCreateDate(cart.getCreateDate());
         int totalPrice=0;
-
         List<CartItemDTO> cartItemDTOS=new ArrayList<>();
         if (cart.getCartItems() != null) {
             for (CartItem cartItem : cart.getCartItems()) {
@@ -73,84 +78,93 @@ public class CartService implements CartServiceImp {
         }
         cartDTO.setTotalPrice(totalPrice);
         cartDTO.setCartItems(cartItemDTOS);
-        return cartDTO;
+        responseData.setSuccess(true);
+        responseData.setData(cartDTO);
+        return responseData;
     }
 
     @Override
-    public boolean insertCart(CartRequest cartRequest) {
+    public ResponseData insertCart(CartRequest cartRequest) {
+        ResponseData responseData = new ResponseData();
         Users user=usersRepository.findById(cartRequest.getUserId());
-        Cart existCart=cartRepository.findByUsersId(cartRequest.getUserId());
-        Cart cart;
-        int totalPrice;
-        if(existCart!=null){
-            cart = existCart;
+        if(user == null) {
+            responseData.setSuccess(false);
+            responseData.setDescription("User not found");
+            return responseData;
         }
-        else{
+        Cart cart = cartRepository.findByUser(user);
+        if(cart == null) {
             cart = new Cart();
-            cart.setUsers(user);
-            cart.setStatus(cartRequest.getStatus());
-            cart.setCreateDate(new Timestamp(System.currentTimeMillis()));
-        }
-        totalPrice = cart.getTotalPrice() == 0 ? 0 : cart.getTotalPrice();
-        Cart savedCart = cartRepository.save(cart);
-        for(CartItemRequest itemRequest : cartRequest.getListItems()){
-            CartItem cartItem=new CartItem();
-            cartItem.setCart(savedCart);
-            Product product=productRepository.findById(itemRequest.getProductId());
-            cartItem.setProduct(product);
-            cartItem.setQuantity(itemRequest.getQuantity());
-            cartItem.setNote(itemRequest.getNote());
-            cartItem.setPrice(product.getPrice() * itemRequest.getQuantity());
-            cartItem.setCreateDate(new Timestamp(System.currentTimeMillis()));
-            totalPrice+=product.getPrice()*itemRequest.getQuantity();
-            cartItemRepository.save(cartItem);
-        }
-        savedCart.setTotalPrice(totalPrice);
-        cartRepository.save(savedCart);
-        return true;
-    }
-
-    @Override
-    public boolean deleteCartItem(int cartItemId) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId);
-        Cart cart = cartItem.getCart();
-        if (cartItem != null) {
-            cartItemRepository.delete(cartItem);
-            int totalPrice = cart.getCartItems()
-                    .stream()
-                    .mapToInt(item -> item.getQuantity() * item.getProduct().getPrice())
-                    .sum();
-            cart.setTotalPrice(totalPrice);
+            cart.setStatus(1);
+            cart.setUser(user);
+            cart.setCreateDate(new Date());
+            cart.setCartItems(new ArrayList<>());
+            cart.setTotalPrice(0);
             cartRepository.save(cart);
-            return true;
         }
-        return false;
-    }
-
-    @Override
-    public boolean updateQuantityCartItem(int cartItemId, int quantity) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId);
-        Cart cart = cartItem.getCart();
-        if(cartItem!=null){
-            cartItem.setQuantity(quantity);
-            int totalPrice = cart.getCartItems()
-                    .stream()
-                    .mapToInt(item -> item.getQuantity() * item.getProduct().getPrice())
-                    .sum();
-            cart.setTotalPrice(totalPrice);
-            cartRepository.save(cart);
-            return true;
+        CartItem cartItem = new CartItem();
+        CartItemRequest cartItemRequest = cartRequest.getCartItemRequest();
+        Product product = productRepository.findById(cartItemRequest.getProductId());
+        if(product == null) {
+            responseData.setSuccess(false);
+            responseData.setDescription("Product not found");
+            return responseData;
         }
-        return false;
-    }
-
-    @Transactional
-    @Override
-    public void deleteAllCart(int userId) {
-        Users user = usersRepository.findById(userId);
-        Cart cart = cartRepository.findByUsersId(userId);
-        cart.setTotalPrice(0);
-        cart.getCartItems().clear();
+        cartItem.setCart(cart);
+        cartItem.setProduct(product);
+        cartItem.setQuantity(cartItemRequest.getQuantity());
+        cartItem.setPrice(product.getPrice());
+        cartItem.setCreateDate(new Date());
+        cartItem.setNote(cartItemRequest.getNote());
+        cart.setTotalPrice(cart.getTotalPrice() + product.getPrice());
+        cart.getCartItems().add(cartItem);
         cartRepository.save(cart);
+        responseData.setSuccess(true);
+        responseData.setDescription("Success");
+        return responseData;
+    }
+
+    @Override
+    public ResponseData deleteCartItem(int cartItemId) {
+        ResponseData responseData = new ResponseData();
+        CartItem cartItem = cartItemRepository.findById(cartItemId);
+        if(cartItem == null) {
+            responseData.setSuccess(false);
+            responseData.setDescription("Item not found");
+            return responseData;
+        }
+        Cart cart = cartItem.getCart();
+        cartItemRepository.delete(cartItem);
+        int totalPrice = cart.getCartItems()
+                .stream()
+                .mapToInt(item -> item.getQuantity() * item.getProduct().getPrice())
+                .sum();
+        cart.setTotalPrice(totalPrice);
+        cartRepository.save(cart);
+        responseData.setSuccess(true);
+        responseData.setDescription("Success");
+        return responseData;
+    }
+
+    @Override
+    public ResponseData updateQuantityCartItem(int cartItemId, int quantity) {
+        ResponseData responseData = new ResponseData();
+        CartItem cartItem = cartItemRepository.findById(cartItemId);
+        if(cartItem == null) {
+            responseData.setSuccess(false);
+            responseData.setDescription("Item not found");
+            return responseData;
+        }
+        Cart cart = cartItem.getCart();
+        cartItem.setQuantity(quantity);
+        int totalPrice = cart.getCartItems()
+                .stream()
+                .mapToInt(item -> item.getQuantity() * item.getProduct().getPrice())
+                .sum();
+        cart.setTotalPrice(totalPrice);
+        cartRepository.save(cart);
+        responseData.setSuccess(true);
+        responseData.setDescription("Success");
+        return responseData;
     }
 }

@@ -49,8 +49,8 @@ public class Users {
     @OneToMany(mappedBy = "users")
     private Set<Orders> listOrders;
 
-    @OneToMany(mappedBy = "users")
-    private Set<Cart> listCarts;
+    @OneToOne(mappedBy = "user")
+    private Cart cart;
 
 
     public int getId() {
@@ -149,11 +149,11 @@ public class Users {
         this.listOrders = listOrders;
     }
 
-    public Set<Cart> getListCarts() {
-        return listCarts;
+    public Cart getCart() {
+        return cart;
     }
 
-    public void setListCarts(Set<Cart> listCarts) {
-        this.listCarts = listCarts;
+    public void setCart(Cart cart) {
+        this.cart = cart;
     }
 }

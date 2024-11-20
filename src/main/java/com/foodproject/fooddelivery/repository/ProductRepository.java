@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
-    Optional<Product> findByTitleAndCategoryId(String title, Integer categoryId);
+    Product findByTitleAndCategoryId(String title, int categoryId);
     @Query(value = "SELECT * FROM product p WHERE "
             + "(?1 IS NULL OR p.category_id = ?1) AND "
             + "(?2 IS NULL OR p.title LIKE %?2%) AND "

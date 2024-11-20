@@ -34,10 +34,7 @@ public class ProductController {
             @RequestParam int price,
             @RequestParam String description
     ){
-        ResponseData responseData = new ResponseData();
-        Map<String, Object> response = productServiceImp.addProduct(file, title, categoryId, price, description);
-        responseData.setSuccess((boolean)response.get("isInserted"));
-        responseData.setExist((boolean)response.get("isExist"));
+        ResponseData responseData = productServiceImp.addProduct(file, title, categoryId, price, description);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
 
@@ -104,9 +101,7 @@ public class ProductController {
             @RequestParam String description,
             @RequestParam(required = false) String oldImage
     ){
-        ResponseData responseData = new ResponseData();
-        boolean isSuccess=productServiceImp.updateProduct(file, productId, title, categoryId, price, description,oldImage);
-        responseData.setData(isSuccess);
+        ResponseData responseData = productServiceImp.updateProduct(file, productId, title, categoryId, price, description,oldImage);
         return new ResponseEntity<>(responseData, HttpStatus.OK);
     }
 

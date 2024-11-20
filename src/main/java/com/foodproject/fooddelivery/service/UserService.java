@@ -100,15 +100,15 @@ public class UserService implements UserServiceImp {
 
     @Override
     public boolean editUser(EditUserRequest editUserRequest) {
-        if(usersRepository.existsById(editUserRequest.getUserId())) {
-            Users user = usersRepository.findById(editUserRequest.getUserId());
-            Roles roles=new Roles();
-            roles.setId(editUserRequest.getRoleId());
-            user.setRoles(roles);
-            usersRepository.save(user);
-            return true;
+        Users user = usersRepository.findById(editUserRequest.getUserId());
+        if(user == null){
+            return false;
         }
-        return false;
+        Roles role = new Roles();
+        role.setId(editUserRequest.getRoleId());
+        user.setRoles(role);
+        usersRepository.save(user);
+        return true;
     }
 
     @Override
