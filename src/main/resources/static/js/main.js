@@ -816,6 +816,16 @@ async function detailOrder(id) {
   if (response.ok) {
     let detail = await response.json();
     localStorage.setItem("order", JSON.stringify(detail.data.orderItems));
+    let statusText="";
+    if(detail.data.status === 1){
+      statusText="Đã xử lý";
+    }
+    else if(detail.data.status==0){
+      statusText="Đang xử lý";
+    }
+    else{
+      statusText="Đã bị hủy";
+    }
     let detailOrderHtml = `
             <ul class="detail-order-group">
                 <li class="detail-order-item">
@@ -832,9 +842,7 @@ async function detailOrder(id) {
                 </li>
                 <li class="detail-order-item">
                     <span class="detail-order-item-left"><i class="fa-light fa-clock"></i> Trạng thái đơn hàng</span>
-                    <span class="detail-order-item-right">${
-                      detail.data.status == 1 ? "Đã xử lý" : "Đang xử lý"
-                    }</span>
+                    <span class="detail-order-item-right">${statusText}</span>
                 </li>
                 <li class="detail-order-item">
                     <span class="detail-order-item-left"><i class="fa-light fa-location-dot"></i> Địa điểm nhận</span>

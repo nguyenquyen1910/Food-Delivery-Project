@@ -140,7 +140,7 @@ $(document).ready(function () {
         orderHtml += `
                     <tr data-order-id="${item.orderId}">
                         <td>${id}</td>
-                        <td>${orderUserName.fullName}</td>
+                        <td>${item.userFullName}</td>
                         <td>${date}</td>
                         <td>${vnd(item.totalPrice)}</td>
                         <td class="status-cell">${status}</td>
