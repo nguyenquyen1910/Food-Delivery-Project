@@ -552,6 +552,8 @@ btnUpdateProductIn.addEventListener("click", async (e) => {
         formData.append("price", parseInt(curProductCur));
         formData.append("description", descProductCur);
 
+        showLoadingModal();
+
         fetch('http://localhost:8080/products/admin/edit', {
             method: 'POST',
             headers: {
@@ -561,6 +563,7 @@ btnUpdateProductIn.addEventListener("click", async (e) => {
         })
         .then(response => response.json())
         .then(data => {
+            hideLoadingModal();
             if (data.success) {
                 products[indexCur].title = titleProductCur;
                 products[indexCur].price = parseInt(curProductCur);
