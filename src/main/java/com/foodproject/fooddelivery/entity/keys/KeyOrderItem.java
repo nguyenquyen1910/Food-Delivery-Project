@@ -2,9 +2,9 @@ package com.foodproject.fooddelivery.entity.keys;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.ManyToOne;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Embeddable
 public class KeyOrderItem implements Serializable {
@@ -36,4 +36,19 @@ public class KeyOrderItem implements Serializable {
     public void setOrderId(int orderId) {
         this.orderId = orderId;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        KeyOrderItem that = (KeyOrderItem) o;
+        return orderId == that.orderId &&
+                productId == that.productId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(orderId, productId);
+    }
+
 }

@@ -288,6 +288,7 @@ async function getAmountCart() {
       `http://localhost:8080/cart/get-cart/${currentUser.id}`
     );
     let result = await response.json();
+    console.log(result);
     amount = result.data.cartItems.length;
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);

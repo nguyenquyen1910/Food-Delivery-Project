@@ -16,7 +16,7 @@ public class Cart {
     @JoinColumn(name = "user_id")
     private Users user;
 
-    @Column(name = "totalPrice")
+    @Column(name = "total_price")
     private int totalPrice;
 
     @Column(name = "create_date")

@@ -16,6 +16,7 @@ import com.foodproject.fooddelivery.repository.CartRepository;
 import com.foodproject.fooddelivery.repository.ProductRepository;
 import com.foodproject.fooddelivery.repository.UsersRepository;
 import com.foodproject.fooddelivery.service.imp.CartServiceImp;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 @Service
+@Transactional
 public class CartService implements CartServiceImp {
 
     @Autowired
