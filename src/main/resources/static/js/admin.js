@@ -887,7 +887,7 @@ function deleteAcount(phone) {
             }
         }).then(response => response.json())
         .then(data => {
-            if(data.data==true){
+            if(data.data===true){
                 localStorage.setItem("accounts",JSON.stringify(accounts));
                 toast({
                     title: 'Thành công',

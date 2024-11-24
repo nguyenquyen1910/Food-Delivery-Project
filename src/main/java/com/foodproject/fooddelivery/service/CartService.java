@@ -130,12 +130,13 @@ public class CartService implements CartServiceImp {
     public ResponseData deleteCartItem(int cartItemId) {
         ResponseData responseData = new ResponseData();
         CartItem cartItem = cartItemRepository.findById(cartItemId);
-        if(cartItem == null) {
+        if (cartItem == null) {
             responseData.setSuccess(false);
             responseData.setDescription("Item not found");
             return responseData;
         }
         Cart cart = cartItem.getCart();
+        cart.getCartItems().remove(cartItem);
         cartItemRepository.delete(cartItem);
         int totalPrice = cart.getCartItems()
                 .stream()
@@ -147,6 +148,7 @@ public class CartService implements CartServiceImp {
         responseData.setDescription("Success");
         return responseData;
     }
+
 
     @Override
     public ResponseData updateQuantityCartItem(int cartItemId, int quantity) {
