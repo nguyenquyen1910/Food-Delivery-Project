@@ -879,7 +879,6 @@ window.onload = function() {
 function deleteAcount(phone) {
     let accounts = JSON.parse(localStorage.getItem('accounts'));
     let index = accounts.find(item => item.userName == phone);
-    console.log(index);
     if (confirm("Bạn có chắc muốn xóa?")) {
         fetch(`http://localhost:8080/user/admin/delete/${index.id}`, {
             method: 'DELETE',

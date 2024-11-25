@@ -118,7 +118,7 @@ public class CartService implements CartServiceImp {
         cartItem.setPrice(product.getPrice());
         cartItem.setCreateDate(new Date());
         cartItem.setNote(cartItemRequest.getNote());
-        cart.setTotalPrice(cart.getTotalPrice() + product.getPrice());
+        cart.setTotalPrice(cart.getTotalPrice() + product.getPrice() * cartItem.getQuantity());
         cart.getCartItems().add(cartItem);
         cartRepository.save(cart);
         responseData.setSuccess(true);
