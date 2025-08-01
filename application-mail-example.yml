@@ -1,0 +1,12 @@
+spring:
+  mail:
+    host: <YOUR_MAIL_HOST>
+    port: 587
+    username: <YOUR_MAIL_USERNAME>
+    password: <YOUR_MAIL_PASSWORD>
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true

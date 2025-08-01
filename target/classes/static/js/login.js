@@ -47,6 +47,7 @@ $(document).ready(function () {
         },
         contentType: "application/x-www-form-urlencoded",
         success: function (response) {
+          console.log(response);
           if (response.success) {
             localStorage.setItem("token", response.data.token);
             if (response.data.user.status == 0) {
